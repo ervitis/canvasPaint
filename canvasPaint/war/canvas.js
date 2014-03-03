@@ -23,16 +23,16 @@ function initialize(){
 function drawSharp(event){
 	var dot;
 	
-	dot = event.clientX + ',' + event.clientY;
+	dot = event.offsetX + ',' + event.offsetY;
 	puntos.push(dot);
 	console.log(puntos.length, dot);
 	
 	
 	if (puntos.length > 1){
-		contextCanvas.lineTo(event.clientX, event.clientY);
+		contextCanvas.lineTo(event.offsetX, event.offsetY);
 		contextCanvas.stroke();
 	}
 	else{
-		contextCanvas.moveTo(event.clientX, event.clientY);
+		contextCanvas.moveTo(event.offsetX, event.offsetY);
 	}
 }
