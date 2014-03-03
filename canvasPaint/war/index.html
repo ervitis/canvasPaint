@@ -6,7 +6,7 @@
 
 <style type="text/css">
 .area{
-	margin: auto;
+	margin: 0 auto;
 	padding: 5px;
 	border: 3px;
 	background-color: #E6E6FF;
@@ -16,10 +16,13 @@
 <script type="text/javascript" src="canvas.js"></script>
 
 </head>
-<body onload="initialize()">
+<body onload="initialize()" onkeypress="toDrawRect(event)">
 
 <p>Área de dibujo | <button onclick="closeShape()" id="idCloseShape">Cerrar figura</button> | <button onclick="cleanShape()">Limpiar</button> <br>
-<canvas id="areaDibujo" width="500" height="500" class="area" onclick="drawSharp(event)">Canvas not supported</canvas>
+<p>Para hacer una línea recta horizontal, vertical o diagonal: mantenga pulsado la tecla Shift y haga clic en el sitio deseado para crear la línea<br>
+<canvas id="areaDibujo" width="500" height="500" class="area" onclick="drawSharp(event)">Canvas not supported</canvas><br>
+
+<div id="inputMedida" style="display: none;"><input type="number" maxlength="4" size="10"></div>
 
 </body>
 </html>
