@@ -9,6 +9,7 @@ var contextCanvas = null;
 var puntos;
 var clickable = true;
 var pointerCounter;
+var offsetX = -1, offsetY;
 
 var CONST_STRAIGHT_LINE = Math.PI / 8;
 
@@ -22,6 +23,7 @@ function initialize(){
 		
 		puntos = new Array();
 		pointerCounter = 0;
+		offsetX = -1;
 	}
 	else{
 		alert("Reload the webpage");
@@ -34,6 +36,10 @@ function initialize(){
  */
 function drawSharp(event){
 	var dot;
+
+	if (offsetX === -1){
+		getOffsetXY(event);
+	}
 	
 	if (!canvas){
 		initialize();
@@ -45,34 +51,40 @@ function drawSharp(event){
 				var code = parseInt(whichStraightLine(
 										puntos[pointerCounter-1].split(',')[0], 
 										puntos[pointerCounter-1].split(',')[1],
-										event.offsetX,
-										event.offsetY));
-				console.log(code);
+										offsetX,
+										offsetY));
 				switch(code){
 					
 					case 1:
-						drawLine(contextCanvas, event.offsetX, puntos[pointerCounter-1].split(',')[1]);
-						showInput(event.offsetX, puntos[pointerCounter-1].split(',')[1]);
+						getOffsetXY(event);
+						drawLine(contextCanvas, offsetX, puntos[pointerCounter-1].split(',')[1]);
+						showInput(offsetX, puntos[pointerCounter-1].split(',')[1]);
 						break;
 					case 2:
-						drawLine(contextCanvas, puntos[pointerCounter-1].split(',')[0], event.offsetY);
-						showInput(puntos[pointerCounter-1].split(',')[0], event.offsetY);
+						getOffsetXY(event);
+						drawLine(contextCanvas, puntos[pointerCounter-1].split(',')[0], offsetY);
+						showInput(puntos[pointerCounter-1].split(',')[0], offsetY);
 						break;
 					default:
-						drawLine(contextCanvas, event.offsetX, event.offsetY);
-						showInput(event.offsetX, event.offsetY);
+						getOffsetXY(event);
+						drawLine(contextCanvas, offsetX, offsetY);
+						showInput(offsetX, offsetY);
 						break;
 				}
 			}
 			else{
-				drawLine(contextCanvas, event.offsetX, event.offsetY);
-				showInput(event.offsetX, event.offsetY);
+				getOffsetXY(event);
+				drawLine(contextCanvas, offsetX, offsetY);
+				showInput(offsetX, offsetY);
 			}
 		}
 		else{
-			contextCanvas.moveTo(event.offsetX, event.offsetY);
+			getOffsetXY(event);
+			contextCanvas.moveTo(offsetX, offsetY);
 		}
-		dot = event.offsetX + ',' + event.offsetY;
+		getOffsetXY(event);
+		dot = offsetX + ',' + offsetY;
+		console.log('punto', dot);
 		puntos.push(dot);
 		++pointerCounter;
 	}
@@ -85,8 +97,26 @@ function drawSharp(event){
  * @param y point
  */
 function drawLine(cc, x, y){
+	console.log('linea ', x, y);
 	cc.lineTo(x, y);
 	cc.stroke();
+}
+
+/**
+ * Re-write the offsetX and offsetY
+ * @see http://www.jacklmoore.com/notes/mouse-position/
+ * @param e
+ */
+function getOffsetXY(e){
+	e = e || window.event;
+	
+	var target = e.target || e.srcElement;
+	var style = target.currentStyle || window.getComputedStyle(target, null);
+	var borderLeftWidth = parseInt(style['borderLeftWidth'], 10);
+	var borderTopWidth = parseInt(style['borderTopWidth'], 10);
+	var rect = target.getBoundingClientRect();
+	offsetX = e.clientX - borderLeftWidth - rect.left;
+	offsetY = e.clientY - borderTopWidth - rect.top;
 }
 
 /**
@@ -141,12 +171,10 @@ function getMeasure(){
 function writeMeasure(cc, x0, y0, x1, y1){
 	var measure = getMeasure();
 	
-	console.log(x0, y0, x1, y1);
-	
 	if (measure !== -1){		
 		var distance = getDistance(x0, y0, x1, y1);
 		var alfa = Math.asin((y1 - y0) / distance);
-		console.log(distance, alfa);
+		console.log(distance, alfa, typeof(alfa));
 		var posY = parseInt((distance / 2) * Math.sin(alfa));
 		var posX = parseInt((distance / 2) * Math.cos(alfa));
 
@@ -228,6 +256,10 @@ function closeShape(){
  * @see http://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing for the canvas cleaning
  */
 function cleanShape(){
+	var width = canvas.width;
+	var height = canvas.height;
+	contextCanvas.fillStyle = '#E6E6FF';
+	contextCanvas.clearRect(0, 0, width, height);
 	canvas.width = canvas.width;
 	contextCanvas = null;
 	canvas = null;
@@ -289,8 +321,16 @@ function whichStraightLine(x0, y0, x1, y1){
  * @returns the distance or -1 if error
  */
 function getDistance(x0, y0, x1, y1){
+	var d;
+	x0 = parseInt(x0);
+	x1 = parseInt(x1);
+	y0 = parseInt(y0);
+	y1 = parseInt(y1);
+	console.log(x0, x1, typeof(x0), typeof(x1), (x1-x0));
 	try{
-		return Math.sqrt(Math.pow((x1 - x0), 2) + Math.pow((y1 - y0), 2));
+		d = parseFloat(Math.sqrt(Math.pow((x1 - x0), 2) + Math.pow((y1 - y0), 2)));
+		console.log(d, typeof(d));
+		return d;
 	}catch(e){
 		console.log(e);
 		return -1;
