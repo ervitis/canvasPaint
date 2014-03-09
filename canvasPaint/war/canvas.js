@@ -11,6 +11,9 @@ var clickable = true;
 var pointerCounter;
 var offsetX = -1, offsetY;
 
+var CONST_GRILL_COLOR = '#8DDAB3';
+var CONST_GRILL_STROKE_WIDTH = 1;
+var CONST_LINE_STROKE_WIDTH = 3;
 var CONST_STRAIGHT_LINE = Math.PI / 8;
 
 /**
@@ -24,9 +27,21 @@ function initialize(){
 		puntos = new Array();
 		pointerCounter = 0;
 		offsetX = -1;
+		
+		if (createGrill(canvas) !== 0){
+			alert('Something went wrong creating the grill, please reload the web page');
+		}
 	}
 	else{
 		alert("Reload the webpage");
+	}
+}
+
+function drawGuideLine(event){
+	if (puntos){
+		if (puntos.length > 0){
+			
+		}
 	}
 }
 
@@ -42,6 +57,7 @@ function drawSharp(event){
 	}
 	
 	if (!canvas){
+		console.log('inicio');
 		initialize();
 	}
 	
@@ -80,6 +96,7 @@ function drawSharp(event){
 		}
 		else{
 			getOffsetXY(event);
+			contextCanvas.beginPath();
 			contextCanvas.moveTo(offsetX, offsetY);
 		}
 		getOffsetXY(event);
@@ -99,7 +116,25 @@ function drawSharp(event){
 function drawLine(cc, x, y){
 	console.log('linea ', x, y);
 	cc.lineTo(x, y);
+	cc.lineWidth = CONST_LINE_STROKE_WIDTH;
+	cc.strokeStyle = '#000000';
 	cc.stroke();
+}
+
+/**
+ * Draw a line and set it with color and stroke style
+ * @param cc context
+ * @param x point
+ * @param y point
+ * @param c color
+ * @param l line stroke style
+ */
+function drawLineWithColor(cc, x, y, c, l){
+	cc.lineTo(x, y);
+	cc.lineWidth = l;
+	cc.strokeStyle = c;
+	cc.stroke();
+	cc.closePath();
 }
 
 /**
@@ -183,7 +218,7 @@ function writeMeasure(cc, x0, y0, x1, y1){
 		posX += parseInt(x0);
 		console.log('despues ', posX, posY);
 		
-		cc.font = '18px Arial';
+		cc.font = '20px Arial';
 		
 		if (!isNaN(measure)){
 			measure = measure.toString();
@@ -256,17 +291,24 @@ function closeShape(){
  * @see http://stackoverflow.com/questions/2142535/how-to-clear-the-canvas-for-redrawing for the canvas cleaning
  */
 function cleanShape(){
-	var width = canvas.width;
-	var height = canvas.height;
-	contextCanvas.fillStyle = '#E6E6FF';
-	contextCanvas.clearRect(0, 0, width, height);
-	canvas.width = canvas.width;
-	contextCanvas = null;
-	canvas = null;
-	puntos = null;
-	clickable = true;
-	document.getElementById('inputMedida').style.display = 'none';
-	document.getElementById('idCloseShape').disabled = false;
+	var width = getCanvasWidth(canvas);
+	var height = getCanvasHeight(canvas);
+	
+	if (width !== -1 && height !== -1){
+		contextCanvas.fillStyle = '#E6E6FF';
+		contextCanvas.clearRect(0, 0, width, height);
+		canvas.width = canvas.width;
+		createGrill(canvas);
+		contextCanvas = null;
+		canvas = null;
+		puntos = null;
+		clickable = true;
+		document.getElementById('inputMedida').style.display = 'none';
+		document.getElementById('idCloseShape').disabled = false;
+	}
+	else{
+		alert('Something went wrong with the canvas, refresh the web page');
+	}
 }
 
 /**
@@ -309,6 +351,70 @@ function whichStraightLine(x0, y0, x1, y1){
 		else{
 			return 0;
 		}
+	}
+}
+
+
+/**
+ * Get the width of the canvas element
+ * @param canvas
+ * @returns the width or -1 if error
+ */
+function getCanvasWidth(canvas){
+	if (canvas){
+		return parseInt(canvas.width);
+	}
+	else{
+		return -1;
+	}
+}
+
+/**
+ * Get the height of the canvas element
+ * @param canvas
+ * @returns the height or -1 if error
+ */
+function getCanvasHeight(canvas){
+	if (canvas){
+		return parseInt(canvas.height);
+	}
+	else{
+		return -1;
+	}
+}
+
+/**
+ * Create a grill for drawing
+ * @param canvas
+ * @returns 0->correct, -1->error in contextCanvas, -2->error in canvas element
+ */
+function createGrill(canvas){
+	var width, height;
+	var canvasGrill = document.getElementById('areaDibujo');
+	var contextCanvasGrill = canvasGrill.getContext('2d');
+	
+	if (canvasGrill){
+		width = getCanvasWidth(canvasGrill);
+		height = getCanvasHeight(canvasGrill);
+		
+		if (contextCanvasGrill){
+			for(var i=0;i<height;i += 20){
+				contextCanvasGrill.moveTo(0, i);
+				drawLineWithColor(contextCanvasGrill, width, i, CONST_GRILL_COLOR, CONST_GRILL_STROKE_WIDTH);
+			}
+			
+			for(var i=0;i<width; i += 20){
+				contextCanvasGrill.moveTo(i, 0);
+				drawLineWithColor(contextCanvasGrill, i, height, CONST_GRILL_COLOR, CONST_GRILL_STROKE_WIDTH);
+			}
+			return 0;
+		}
+		else{
+			return -1;
+		}
+	}
+	else{
+		return -2;
 	}
 }
 
