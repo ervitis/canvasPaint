@@ -183,6 +183,7 @@ function hideInput(){
  */
 function getMeasure(){
 	var measure = document.getElementById('inputM').value;
+	console.log('getMeasure', measure);
 	
 	if (measure.indexOf(',') > -1){
 		measure = measure.replace(',', '.');
@@ -242,14 +243,24 @@ function getMeasureIntro(event){
 	var code = event.which ? event.which : event.keyCode;
 	
 	if (code === 13){
-		if (canvas){
-			writeMeasure(
-					contextCanvas, 
-					puntos[pointerCounter-2].split(',')[0],
-					puntos[pointerCounter-2].split(',')[1],
-					puntos[pointerCounter-1].split(',')[0],
-					puntos[pointerCounter-1].split(',')[1]);
-			
+		if (canvas){			
+			if (clickable){
+				console.log('clickable');
+				writeMeasure(
+						contextCanvas, 
+						puntos[pointerCounter-2].split(',')[0],
+						puntos[pointerCounter-2].split(',')[1],
+						puntos[pointerCounter-1].split(',')[0],
+						puntos[pointerCounter-1].split(',')[1]);
+			}
+			else{
+				writeMeasure(
+						contextCanvas,
+						puntos[0].split(',')[0],
+						puntos[0].split(',')[1],
+						puntos[pointerCounter-1].split(',')[0],
+						puntos[pointerCounter-1].split(',')[1]);
+			}
 			var inputMedida = document.getElementById('inputMedida');
 			inputMedida.style.display = 'none';
 			inputMedida.children[0].value = '';
@@ -276,7 +287,7 @@ function closeShape(){
 			contextCanvas.stroke();
 			
 			document.getElementById('idCloseShape').disabled = true;
-			hideInput();
+			showInput(inicioX, inicioY);
 			clickable = false;
 		}
 		else{
