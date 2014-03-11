@@ -2,14 +2,19 @@ package com.canvas;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import javax.mail.Authenticator;
+import javax.mail.BodyPart;
 import javax.mail.Message;
+import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +23,16 @@ import javax.servlet.http.HttpServletResponse;
 @SuppressWarnings("serial")
 public class SendMessage extends HttpServlet{
 	
+	public static final Logger log = Logger.getLogger(SendMessage.class.getName());
+	
+	/**
+	 * Servlet to process the send email request
+	 * @see http://stackoverflow.com/questions/9822633/sending-an-html-email-with-an-image-in-gae
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 * @throws ServletException
+	 */
 	protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException{
 		try{
 			String code = request.getParameter("code");
@@ -40,12 +55,21 @@ public class SendMessage extends HttpServlet{
 			message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(DatosCorreo.correo));
 			message.setSubject(DatosCorreo.subject);
 			
-			message.setText("Prueba");
+			StringBuilder emailBuilder = new StringBuilder();
+			emailBuilder.append(DatosCorreo.builder1);
+			emailBuilder.append(code);
+			emailBuilder.append(DatosCorreo.builder2);
+			
+			Multipart multipart = new MimeMultipart();
+			
+			BodyPart bodyPart = new MimeBodyPart();			
+			bodyPart.setContent(emailBuilder.toString(), "text/html; charset=UTF-8");
+			multipart.addBodyPart(bodyPart);
+			message.setContent(multipart);
 			
 			Transport.send(message);
-			
-			System.out.println(code);
 		}catch(Exception e){
+			log.warning(e.getMessage() + ": " + e.getLocalizedMessage());
 			e.printStackTrace();
 		}
 	}

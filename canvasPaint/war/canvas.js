@@ -524,12 +524,12 @@ function getBase64Image(){
 	return -1;
 }
 
+/**
+ * Function to send an email
+ * @param code the base64 code
+ */
 function sendEmail(code){
 	var request;
-	var param =
-	{
-		'code': code	
-	};
 	
 	if (window.XMLHttpRequest){
 		request = new XMLHttpRequest();
@@ -539,8 +539,9 @@ function sendEmail(code){
 	}
 	
 	try{
-		request.open('POST', '/SendMessage', false);
-		request.send(JSON.stringify(param));
+		request.open("POST", "/SendMessage", false);
+		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		request.send("code=" + code);
 	}catch(e){
 		console.log(e);
 	}
