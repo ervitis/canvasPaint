@@ -29,6 +29,18 @@
 
 <div id="inputMedida" style="display: none;" class="medidas">Medida: <input type="text" maxlength="6" size="10" id="inputM" onblur="getMeasure()" onkeypress="return isFloat(event)" onkeyup="getMeasureIntro(event)"></div>
 <br>
+<div id="gridMeasures" style="display: none;" class="medidas">
+	<table>
+		<tr>
+			<td>Posición desde lado izquierdo:</td>
+			<td id="posX"></td>
+		</tr>
+		<tr>
+			<td>Posición desde arriba:</td>
+			<td id="posY"></td>
+		</tr>
+	</table>
+</div>
 <img id="drawShowerPlate" width="500" height="500" style="display:none">
 </body>
 </html>

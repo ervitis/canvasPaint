@@ -16,6 +16,8 @@ var CONST_GRILL_STROKE_WIDTH = 1;
 var CONST_LINE_STROKE_WIDTH = 3;
 var CONST_STRAIGHT_LINE = Math.PI / 8;
 var CONST_SEPARATION = 8;
+var CONST_RADIUS = 10;
+var CONST_CIRCLE = 2*Math.PI;
 
 /**
  * Initialize the tool
@@ -544,5 +546,28 @@ function sendEmail(code){
 		request.send("code=" + code);
 	}catch(e){
 		console.log(e);
+	}
+}
+
+function getCoordinatesGrid(x, y){
+	var xGrid = x;
+	var yGrid = y;
+	
+	setGrid(x, y);
+}
+
+function setGrid(x, y){
+	drawCircle(x, y);
+	
+}
+
+function drawCircle(x, y){
+	if (canvas){
+		contextCanvas.beginPath();
+		contextCanvas.arc(x, y, 0, CONST_CIRCLE);
+		contextCanvas.stroke();
+	}
+	else{
+		alert('Please refresh the web page');
 	}
 }
