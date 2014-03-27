@@ -23,11 +23,24 @@
 </head>
 <body onload="initialize()">
 
-<p>Área de dibujo | <button onclick="closeShape()" id="idCloseShape">Cerrar figura</button> | <button onclick="cleanShape()">Limpiar</button> <br>
+<p>Área de dibujo | <button onclick="closeShape()" id="idCloseShape">Cerrar figura</button> | <button onclick="cleanShape()">Limpiar</button> | <button id="btnSave" onclick="saveImage()">Guardar imagen</button> <br>
 <p>Para hacer una línea recta horizontal, vertical o diagonal: mantenga pulsado la tecla Shift y haga clic en el sitio deseado para crear la línea<br>
-<canvas id="areaDibujo" width="500" height="500" class="area" onclick="drawSharp(event)" onmousemove="drawGuideLine(event)">Canvas not supported</canvas><br>
+<canvas id="areaDibujo" width="700" height="200" class="area" onclick="drawSharp(event)" onmousemove="drawGuideLine(event)">Canvas not supported</canvas><br>
 
 <div id="inputMedida" style="display: none;" class="medidas">Medida: <input type="text" maxlength="6" size="10" id="inputM" onblur="getMeasure()" onkeypress="return isFloat(event)" onkeyup="getMeasureIntro(event)"></div>
-
+<br>
+<div id="gridMeasures" style="display: none;" class="medidas">
+	<table>
+		<tr>
+			<td>Posición desde lado izquierdo:</td>
+			<td id="posX"><input id="inputPosX" type="text" size="10" maxlength="6" onkeypress="return isFloat(event)" onkeyup="getGridIntro(event)"></td>
+		</tr>
+		<tr>
+			<td>Posición desde arriba:</td>
+			<td id="posY"><input id="inputPosY" type="text" size="10" maxlength="6" onkeypress="return isFloat(event)" onkeyup="getGridIntro(event)"></td>
+		</tr>
+	</table>
+</div>
+<img id="drawShowerPlate" width="100" height="100" style="display:none">
 </body>
 </html>

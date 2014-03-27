@@ -8,6 +8,7 @@ var canvas = null;
 var contextCanvas = null;
 var puntos;
 var clickable = true;
+var isDrawGrid = false;
 var pointerCounter;
 var offsetX = -1, offsetY;
 
@@ -15,11 +16,18 @@ var CONST_GRILL_COLOR = '#8DDAB3';
 var CONST_GRILL_STROKE_WIDTH = 1;
 var CONST_LINE_STROKE_WIDTH = 3;
 var CONST_STRAIGHT_LINE = Math.PI / 8;
+var CONST_SEPARATION = 8;
+var CONST_RADIUS = 10;
+var CONST_CIRCLE = 2*Math.PI;
+var CONST_GRID_LEFT = -1;
+var CONST_GRID_TOP = -1;
+var CONST_GRID_MEASURES_TOP_MINUS = 10;
 
 /**
  * Initialize the tool
  */
 function initialize(){	
+	document.getElementById('btnSave').setAttribute("disabled", "disabled");
 	if (canvas === null){
 		canvas = document.getElementById("areaDibujo");
 		contextCanvas = canvas.getContext("2d");
@@ -27,6 +35,9 @@ function initialize(){
 		puntos = new Array();
 		pointerCounter = 0;
 		offsetX = -1;
+		
+		CONST_GRID_LEFT = getCanvasWidth(canvas);
+		CONST_GRID_TOP = getCanvasHeight(canvas) / 2;
 		
 		if (createGrill(canvas) !== 0){
 			alert('Something went wrong creating the grill, please reload the web page');
@@ -57,18 +68,19 @@ function drawSharp(event){
 	}
 	
 	if (!canvas){
-		console.log('inicio');
 		initialize();
 	}
 	
 	if (clickable){
 		if (puntos.length > 0){
 			if (isShiftPressed(event)){
+				getOffsetXY(event);
 				var code = parseInt(whichStraightLine(
 										puntos[pointerCounter-1].split(',')[0], 
 										puntos[pointerCounter-1].split(',')[1],
 										offsetX,
 										offsetY));
+				console.log('line code', code);
 				switch(code){
 					
 					case 1:
@@ -101,9 +113,15 @@ function drawSharp(event){
 		}
 		getOffsetXY(event);
 		dot = offsetX + ',' + offsetY;
-		console.log('punto', dot);
 		puntos.push(dot);
 		++pointerCounter;
+	}
+	
+	if (isDrawGrid){
+		getOffsetXY(event);
+		if (offsetX !== -1){
+			getCoordinatesGrid(offsetX, offsetY);
+		}
 	}
 }
 
@@ -114,7 +132,6 @@ function drawSharp(event){
  * @param y point
  */
 function drawLine(cc, x, y){
-	console.log('linea ', x, y);
 	cc.lineTo(x, y);
 	cc.lineWidth = CONST_LINE_STROKE_WIDTH;
 	cc.strokeStyle = '#000000';
@@ -183,7 +200,6 @@ function hideInput(){
  */
 function getMeasure(){
 	var measure = document.getElementById('inputM').value;
-	console.log('getMeasure', measure);
 	
 	if (measure.indexOf(',') > -1){
 		measure = measure.replace(',', '.');
@@ -194,6 +210,17 @@ function getMeasure(){
 		return parseFloat(measure);
 	}
 	return -1;
+}
+
+function getGridMeasureParsed(value){
+	var v;
+	
+	if (value.indexOf('.') > -1){
+		v = value.replace('.', ',');
+		return v;
+	}
+	
+	return value;
 }
 
 /**
@@ -210,16 +237,32 @@ function writeMeasure(cc, x0, y0, x1, y1){
 	if (measure !== -1){		
 		var distance = getDistance(x0, y0, x1, y1);
 		var alfa = Math.asin((y1 - y0) / distance);
-		console.log(distance, alfa, typeof(alfa));
 		var posY = parseInt((distance / 2) * Math.sin(alfa));
 		var posX = parseInt((distance / 2) * Math.cos(alfa));
 
-		console.log('antes ', posX, posY);
-		posY += parseInt(y0);
-		posX += parseInt(x0);
-		console.log('despues ', posX, posY);
+		var sx = parseInt(x1) - parseInt(x0);
+		var sy = parseInt(y1) - parseInt(y0);
+		
+		if (sx >= 0 && sy >= 0){
+			posY += parseInt(y0) - CONST_SEPARATION;
+			posX += parseInt(x0) + CONST_SEPARATION;
+		}
+		else if (sx >= 0 && sy < 0){
+			posY += parseInt(y0) + CONST_SEPARATION;
+			posX += parseInt(x0) + CONST_SEPARATION;
+		}
+		else if (sx < 0 && sy >= 0){
+			posY += parseInt(y0) - CONST_SEPARATION;
+			posX += parseInt(x0) - CONST_SEPARATION;
+		}
+		else{
+			posY += parseInt(y0) + CONST_SEPARATION;
+			posX += parseInt(x0) - CONST_SEPARATION;
+		}
+		
 		
 		cc.font = '20px Arial';
+		cc.fillStyle = 'blue';
 		
 		if (!isNaN(measure)){
 			measure = measure.toString();
@@ -245,21 +288,41 @@ function getMeasureIntro(event){
 	if (code === 13){
 		if (canvas){			
 			if (clickable){
-				console.log('clickable');
-				writeMeasure(
-						contextCanvas, 
-						puntos[pointerCounter-2].split(',')[0],
-						puntos[pointerCounter-2].split(',')[1],
-						puntos[pointerCounter-1].split(',')[0],
-						puntos[pointerCounter-1].split(',')[1]);
+				if (parseInt(puntos[pointerCounter-2].split(',')[0]) <= parseInt(puntos[pointerCounter-1].split(',')[0])){
+					writeMeasure(
+							contextCanvas, 
+							puntos[pointerCounter-2].split(',')[0],
+							puntos[pointerCounter-2].split(',')[1],
+							puntos[pointerCounter-1].split(',')[0],
+							puntos[pointerCounter-1].split(',')[1]);
+				}
+				else{
+					writeMeasure(
+							contextCanvas, 
+							puntos[pointerCounter-1].split(',')[0],
+							puntos[pointerCounter-1].split(',')[1],
+							puntos[pointerCounter-2].split(',')[0],
+							puntos[pointerCounter-2].split(',')[1]);
+				}
 			}
 			else{
-				writeMeasure(
-						contextCanvas,
-						puntos[0].split(',')[0],
-						puntos[0].split(',')[1],
-						puntos[pointerCounter-1].split(',')[0],
-						puntos[pointerCounter-1].split(',')[1]);
+				if (parseInt(puntos[0].split(',')[0]) <= parseInt(puntos[pointerCounter-1].split(',')[0])){
+					writeMeasure(
+							contextCanvas,
+							puntos[0].split(',')[0],
+							puntos[0].split(',')[1],
+							puntos[pointerCounter-1].split(',')[0],
+							puntos[pointerCounter-1].split(',')[1]);
+				}
+				else{
+					writeMeasure(
+							contextCanvas,
+							puntos[pointerCounter-1].split(',')[0],
+							puntos[pointerCounter-1].split(',')[1],
+							puntos[0].split(',')[0],
+							puntos[0].split(',')[1]);
+				}
+				document.getElementById('btnSave').removeAttribute('disabled');
 			}
 			var inputMedida = document.getElementById('inputMedida');
 			inputMedida.style.display = 'none';
@@ -286,9 +349,11 @@ function closeShape(){
 			contextCanvas.lineTo(inicioX, inicioY);
 			contextCanvas.stroke();
 			
-			document.getElementById('idCloseShape').disabled = true;
+			document.getElementById('idCloseShape').setAttribute("disabled", "disabled");
 			showInput(inicioX, inicioY);
 			clickable = false;
+			
+			isDrawGrid = true;
 		}
 		else{
 			alert("You have to draw more than two lines to create the shape");
@@ -305,6 +370,9 @@ function cleanShape(){
 	var width = getCanvasWidth(canvas);
 	var height = getCanvasHeight(canvas);
 	
+	document.getElementById('btnSave').disabled = true;
+	document.getElementById('drawShowerPlate').style.display = 'none';
+	
 	if (width !== -1 && height !== -1){
 		contextCanvas.fillStyle = '#E6E6FF';
 		contextCanvas.clearRect(0, 0, width, height);
@@ -314,8 +382,9 @@ function cleanShape(){
 		canvas = null;
 		puntos = null;
 		clickable = true;
+		isDrawGrid = false;
 		document.getElementById('inputMedida').style.display = 'none';
-		document.getElementById('idCloseShape').disabled = false;
+		document.getElementById('idCloseShape').removeAttribute("disabled");
 	}
 	else{
 		alert('Something went wrong with the canvas, refresh the web page');
@@ -443,13 +512,164 @@ function getDistance(x0, y0, x1, y1){
 	x1 = parseInt(x1);
 	y0 = parseInt(y0);
 	y1 = parseInt(y1);
-	console.log(x0, x1, typeof(x0), typeof(x1), (x1-x0));
 	try{
 		d = parseFloat(Math.sqrt(Math.pow((x1 - x0), 2) + Math.pow((y1 - y0), 2)));
-		console.log(d, typeof(d));
 		return d;
 	}catch(e){
 		console.log(e);
 		return -1;
+	}
+}
+
+/**
+ * Save the canvas to png image
+ */
+function saveImage(){
+	if (canvas){
+		var img = canvas.toDataURL('image/png');
+		var drawShower = document.getElementById('drawShowerPlate');
+		drawShower.width = getCanvasWidth(canvas);
+		drawShower.height = getCanvasHeight(canvas);
+		drawShower.src = img;
+		drawShower.style.display = 'inline';
+		
+		var codeBase = getBase64Image();
+		if (codeBase !== -1){
+			sendEmail(codeBase);
+		}
+	}
+	else{
+		alert('Something wrong happened with the canvas, please refresh the web page and try again');
+	}
+}
+
+/**
+ * Get the Base64 code of the image
+ * @see http://stackoverflow.com/questions/934012/get-image-data-in-javascript
+ * @returns the code in base64 format or -1 if error
+ */
+function getBase64Image(){
+	if (canvas){
+		var data = canvas.toDataURL('image/png');
+		return data.replace(/^data:image\/(png|jpg);base64,/, "");
+	}
+	return -1;
+}
+
+/**
+ * Function to send an email
+ * @param code the base64 code
+ */
+function sendEmail(code){
+	var request;
+	
+	if (window.XMLHttpRequest){
+		request = new XMLHttpRequest();
+	}
+	else{
+		request = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	
+	try{
+		request.open("POST", "/SendMessage", false);
+		request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		request.send("code=" + code);
+	}catch(e){
+		console.log(e);
+	}
+}
+
+/**
+ * Function to get the coordinates to draw a grid
+ * @param x
+ * @param y
+ */
+function getCoordinatesGrid(x, y){
+	var xGrid = x;
+	var yGrid = y;
+	
+	setGrid(x, y);
+}
+
+/**
+ * Function to set a grid
+ * @param x
+ * @param y
+ */
+function setGrid(x, y){
+	drawCircle(x, y);
+	
+}
+
+/**
+ * Function to draw a circle
+ * @param x
+ * @param y
+ */
+function drawCircle(x, y){
+	var inputMedidasGrid = document.getElementById('gridMeasures');
+	
+	if (canvas){
+		contextCanvas.beginPath();
+		contextCanvas.arc(x, y, CONST_RADIUS, 0, CONST_CIRCLE);
+		contextCanvas.stroke();
+		isDrawGrid = false;
+		
+		if (CONST_GRID_TOP !== -1 && CONST_GRID_LEFT !== -1){
+			inputMedidasGrid.style.display = 'inline';
+			inputMedidasGrid.style.position = 'absolute';
+			inputMedidasGrid.style.top = CONST_GRID_TOP + 'px';
+			inputMedidasGrid.style.left = CONST_GRID_LEFT + 'px';
+			
+			document.getElementById('inputPosX').focus();
+		}
+		else{
+			alert('Please refresh the web page');
+		}
+	}
+	else{
+		alert('Please refresh the web page');
+	}
+}
+
+/**
+ * Get the measures from the input text for the grid
+ * @param event
+ */
+function getGridIntro(event){
+	var key = event.which ? event.which : event.keyCode;
+	
+	if (key === 13){
+		var measureX = document.getElementById('inputPosX');
+		var measureY = document.getElementById('inputPosY');
+		
+		if (measureX.value !== '' && measureY.value !== ''){
+			//write the measures in the canvas layer
+			var gridX = getGridMeasureParsed(measureX.value);
+			var gridY = getGridMeasureParsed(measureY.value);
+			
+			var measures = 'Horizontal desde izq= ' + gridX + ' Vertical desde der= ' + gridY;
+			measureX.value = '';
+			measureY.value = '';
+			document.getElementById('gridMeasures').style.display = 'none';
+			
+			if (canvas && contextCanvas){
+				contextCanvas.font = '20px Arial';
+				contextCanvas.fillStyle = 'blue';
+				contextCanvas.fillText(measures, 0, getCanvasHeight(canvas) - CONST_GRID_MEASURES_TOP_MINUS);
+			}
+			else{
+				alert('Please refresh the web page');
+			}
+		}
+		else{
+			alert('Ahora introduzca la otra medida que queda');
+			if (measureX.value === ''){
+				measureX.focus();
+			}
+			else{
+				measureY.focus();
+			}
+		}
 	}
 }
