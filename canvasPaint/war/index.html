@@ -23,7 +23,7 @@
 </head>
 <body onload="initialize()">
 
-<p>Área de dibujo | <button onclick="closeShape()" id="idCloseShape">Cerrar figura</button> | <button onclick="cleanShape()">Limpiar</button> | <button id="btnSave" onclick="saveImage()">Guardar imagen</button> <br>
+<p>Área de dibujo | <button onclick="closeShape()" id="idCloseShape" disabled="disabled">Cerrar figura</button> | <button onclick="cleanShape()">Limpiar</button> | <button id="btnSave" onclick="saveImage()">Guardar imagen</button> <br>
 <p>Para hacer una línea recta horizontal, vertical o diagonal: mantenga pulsado la tecla Shift y haga clic en el sitio deseado para crear la línea<br>
 <canvas id="areaDibujo" width="700" height="200" class="area" onclick="drawSharp(event)" onmousemove="drawGuideLine(event)">Canvas not supported</canvas><br>
 
