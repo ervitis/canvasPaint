@@ -21,6 +21,7 @@ var CONST_RADIUS = 10;
 var CONST_CIRCLE = 2*Math.PI;
 var CONST_GRID_LEFT = -1;
 var CONST_GRID_TOP = -1;
+var CONST_GRID_MEASURES_TOP_MINUS = 10;
 
 /**
  * Initialize the tool
@@ -35,8 +36,8 @@ function initialize(){
 		pointerCounter = 0;
 		offsetX = -1;
 		
-		CONST_GRID_LEFT = parseInt(canvas.width);
-		CONST_GRID_TOP = parseInt(canvas.height / 2);
+		CONST_GRID_LEFT = getCanvasWidth(canvas);
+		CONST_GRID_TOP = getCanvasHeight(canvas) / 2;
 		
 		if (createGrill(canvas) !== 0){
 			alert('Something went wrong creating the grill, please reload the web page');
@@ -209,6 +210,17 @@ function getMeasure(){
 		return parseFloat(measure);
 	}
 	return -1;
+}
+
+function getGridMeasureParsed(value){
+	var v;
+	
+	if (value.indexOf('.') > -1){
+		v = value.replace('.', ',');
+		return v;
+	}
+	
+	return value;
 }
 
 /**
@@ -516,6 +528,8 @@ function saveImage(){
 	if (canvas){
 		var img = canvas.toDataURL('image/png');
 		var drawShower = document.getElementById('drawShowerPlate');
+		drawShower.width = getCanvasWidth(canvas);
+		drawShower.height = getCanvasHeight(canvas);
 		drawShower.src = img;
 		drawShower.style.display = 'inline';
 		
@@ -601,17 +615,61 @@ function drawCircle(x, y){
 		contextCanvas.stroke();
 		isDrawGrid = false;
 		
-		console.log(typeof(CONST_GRID_TOP), typeof(CONST_GRID_LEFT));
-		
-		inputMedidasGrid.style.display = 'inline';
-		inputMedidasGrid.style.position = 'absolute';
-		inputMedidasGrid.style.top = CONST_GRID_TOP + 'px';
-		inputMedidasGrid.style.left = CONST_GRID_LEFT + 'px';
-		
-		console.log(typeof(CONST_GRID_TOP), typeof(CONST_GRID_LEFT));
-		console.log(CONST_GRID_TOP, CONST_GRID_LEFT);
+		if (CONST_GRID_TOP !== -1 && CONST_GRID_LEFT !== -1){
+			inputMedidasGrid.style.display = 'inline';
+			inputMedidasGrid.style.position = 'absolute';
+			inputMedidasGrid.style.top = CONST_GRID_TOP + 'px';
+			inputMedidasGrid.style.left = CONST_GRID_LEFT + 'px';
+			
+			document.getElementById('inputPosX').focus();
+		}
+		else{
+			alert('Please refresh the web page');
+		}
 	}
 	else{
 		alert('Please refresh the web page');
+	}
+}
+
+/**
+ * Get the measures from the input text for the grid
+ * @param event
+ */
+function getGridIntro(event){
+	var key = event.which ? event.which : event.keyCode;
+	
+	if (key === 13){
+		var measureX = document.getElementById('inputPosX');
+		var measureY = document.getElementById('inputPosY');
+		
+		if (measureX.value !== '' && measureY.value !== ''){
+			//write the measures in the canvas layer
+			var gridX = getGridMeasureParsed(measureX.value);
+			var gridY = getGridMeasureParsed(measureY.value);
+			
+			var measures = 'Horizontal desde izq= ' + gridX + ' Vertical desde der= ' + gridY;
+			measureX.value = '';
+			measureY.value = '';
+			document.getElementById('gridMeasures').style.display = 'none';
+			
+			if (canvas && contextCanvas){
+				contextCanvas.font = '20px Arial';
+				contextCanvas.fillStyle = 'blue';
+				contextCanvas.fillText(measures, 0, getCanvasHeight(canvas) - CONST_GRID_MEASURES_TOP_MINUS);
+			}
+			else{
+				alert('Please refresh the web page');
+			}
+		}
+		else{
+			alert('Ahora introduzca la otra medida que queda');
+			if (measureX.value === ''){
+				measureX.focus();
+			}
+			else{
+				measureY.focus();
+			}
+		}
 	}
 }
