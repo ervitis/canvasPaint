@@ -8,6 +8,7 @@ var canvas = null;
 var contextCanvas = null;
 var puntos;
 var clickable = true;
+var isDrawGrid = false;
 var pointerCounter;
 var offsetX = -1, offsetY;
 
@@ -18,6 +19,8 @@ var CONST_STRAIGHT_LINE = Math.PI / 8;
 var CONST_SEPARATION = 8;
 var CONST_RADIUS = 10;
 var CONST_CIRCLE = 2*Math.PI;
+var CONST_GRID_LEFT = -1;
+var CONST_GRID_TOP = -1;
 
 /**
  * Initialize the tool
@@ -31,6 +34,9 @@ function initialize(){
 		puntos = new Array();
 		pointerCounter = 0;
 		offsetX = -1;
+		
+		CONST_GRID_LEFT = parseInt(canvas.width);
+		CONST_GRID_TOP = parseInt(canvas.height / 2);
 		
 		if (createGrill(canvas) !== 0){
 			alert('Something went wrong creating the grill, please reload the web page');
@@ -108,6 +114,13 @@ function drawSharp(event){
 		dot = offsetX + ',' + offsetY;
 		puntos.push(dot);
 		++pointerCounter;
+	}
+	
+	if (isDrawGrid){
+		getOffsetXY(event);
+		if (offsetX !== -1){
+			getCoordinatesGrid(offsetX, offsetY);
+		}
 	}
 }
 
@@ -327,6 +340,8 @@ function closeShape(){
 			document.getElementById('idCloseShape').setAttribute("disabled", "disabled");
 			showInput(inicioX, inicioY);
 			clickable = false;
+			
+			isDrawGrid = true;
 		}
 		else{
 			alert("You have to draw more than two lines to create the shape");
@@ -355,6 +370,7 @@ function cleanShape(){
 		canvas = null;
 		puntos = null;
 		clickable = true;
+		isDrawGrid = false;
 		document.getElementById('inputMedida').style.display = 'none';
 		document.getElementById('idCloseShape').removeAttribute("disabled");
 	}
@@ -549,6 +565,11 @@ function sendEmail(code){
 	}
 }
 
+/**
+ * Function to get the coordinates to draw a grid
+ * @param x
+ * @param y
+ */
 function getCoordinatesGrid(x, y){
 	var xGrid = x;
 	var yGrid = y;
@@ -556,16 +577,39 @@ function getCoordinatesGrid(x, y){
 	setGrid(x, y);
 }
 
+/**
+ * Function to set a grid
+ * @param x
+ * @param y
+ */
 function setGrid(x, y){
 	drawCircle(x, y);
 	
 }
 
+/**
+ * Function to draw a circle
+ * @param x
+ * @param y
+ */
 function drawCircle(x, y){
+	var inputMedidasGrid = document.getElementById('gridMeasures');
+	
 	if (canvas){
 		contextCanvas.beginPath();
-		contextCanvas.arc(x, y, 0, CONST_CIRCLE);
+		contextCanvas.arc(x, y, CONST_RADIUS, 0, CONST_CIRCLE);
 		contextCanvas.stroke();
+		isDrawGrid = false;
+		
+		console.log(typeof(CONST_GRID_TOP), typeof(CONST_GRID_LEFT));
+		
+		inputMedidasGrid.style.display = 'inline';
+		inputMedidasGrid.style.position = 'absolute';
+		inputMedidasGrid.style.top = CONST_GRID_TOP + 'px';
+		inputMedidasGrid.style.left = CONST_GRID_LEFT + 'px';
+		
+		console.log(typeof(CONST_GRID_TOP), typeof(CONST_GRID_LEFT));
+		console.log(CONST_GRID_TOP, CONST_GRID_LEFT);
 	}
 	else{
 		alert('Please refresh the web page');
