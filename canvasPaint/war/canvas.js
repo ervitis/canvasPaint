@@ -83,6 +83,7 @@ function drawSharp(event){
 			if (document.getElementById('inputMedida').style.display === 'inline'){
 				if (document.getElementById('inputM').value === ''){
 					alert('Introduzca la medida que pide');
+					document.getElementById('inputM').focus();
 				}
 			}
 			else{
@@ -159,7 +160,7 @@ function drawSharp(event){
 		clickable = true;
 	}
 	
-	if (isDrawGrid){
+	if (isDrawGrid && isShapeClosed){
 		if (puntos.length > 3 && isLastMeasure){
 			getOffsetXY(event);
 			if (offsetX !== -1){
@@ -325,7 +326,7 @@ function writeMeasure(cc, x0, y0, x1, y1){
 		alert('Invalid measure');
 	}
 	
-	if (puntos.length === 4 && !isShapeClosed){
+	if (pointerCounter === 4 && !isShapeClosed){
 		document.getElementById('idCloseShape').removeAttribute('disabled');
 		isLastMeasure = true;
 	}
