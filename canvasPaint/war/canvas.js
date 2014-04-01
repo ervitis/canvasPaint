@@ -161,10 +161,13 @@ function drawSharp(event){
 	}
 	
 	if (isDrawGrid && isShapeClosed){
+		console.log(isDrawGrid, isShapeClosed);
 		if (puntos.length > 3 && isLastMeasure){
+			console.log(puntos.length, isLastMeasure);
 			getOffsetXY(event);
 			if (offsetX !== -1){
 				getCoordinatesGrid(offsetX, offsetY);
+				isDrawGrid = false;
 			}
 		}
 		else{
@@ -326,7 +329,7 @@ function writeMeasure(cc, x0, y0, x1, y1){
 		alert('Invalid measure');
 	}
 	
-	if (pointerCounter === 4 && !isShapeClosed){
+	if (pointerCounter === 4 && !isShapeClosed && !isDrawGrid){
 		document.getElementById('idCloseShape').removeAttribute('disabled');
 		isLastMeasure = true;
 	}
@@ -387,10 +390,12 @@ function getMeasureIntro(event){
 		else{
 			alert('Debe insertar la medida');
 		}
-		
-		if (puntos.length === 4){
+		/*
+		 * Fixed bug
+		if (puntos.length >= 4){
 			isDrawGrid = true;
 		}
+		*/
 	}
 }
 
