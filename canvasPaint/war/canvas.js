@@ -9,6 +9,8 @@ var contextCanvas = null;
 var puntos;
 var clickable = true;
 var isDrawGrid = false;
+var isShapeClosed = false;
+var isLastMeasure = false;
 var pointerCounter;
 var offsetX = -1, offsetY;
 
@@ -71,58 +73,108 @@ function drawSharp(event){
 		initialize();
 	}
 	
+	if (puntos.length === 4 && !isShapeClosed){
+		clickable = false;
+		alert('Un plato de ducha debe tener 4 lados solamente, pulse sobre \"Cerrar figura\"');
+	}
+	
 	if (clickable){
 		if (puntos.length > 0){
-			if (isShiftPressed(event)){
-				getOffsetXY(event);
-				var code = parseInt(whichStraightLine(
-										puntos[pointerCounter-1].split(',')[0], 
-										puntos[pointerCounter-1].split(',')[1],
-										offsetX,
-										offsetY));
-				console.log('line code', code);
-				switch(code){
-					
-					case 1:
-						getOffsetXY(event);
-						drawLine(contextCanvas, offsetX, puntos[pointerCounter-1].split(',')[1]);
-						showInput(offsetX, puntos[pointerCounter-1].split(',')[1]);
-						break;
-					case 2:
-						getOffsetXY(event);
-						drawLine(contextCanvas, puntos[pointerCounter-1].split(',')[0], offsetY);
-						showInput(puntos[pointerCounter-1].split(',')[0], offsetY);
-						break;
-					default:
-						getOffsetXY(event);
-						drawLine(contextCanvas, offsetX, offsetY);
-						showInput(offsetX, offsetY);
-						break;
+			if (document.getElementById('inputMedida').style.display === 'inline'){
+				if (document.getElementById('inputM').value === ''){
+					alert('Introduzca la medida que pide');
+					document.getElementById('inputM').focus();
 				}
 			}
 			else{
-				getOffsetXY(event);
-				drawLine(contextCanvas, offsetX, offsetY);
-				showInput(offsetX, offsetY);
+			
+				if (isShiftPressed(event)){
+					getOffsetXY(event);
+					var code = parseInt(whichStraightLine(
+											puntos[pointerCounter-1].split(',')[0], 
+											puntos[pointerCounter-1].split(',')[1],
+											offsetX,
+											offsetY));
+					switch(code){
+						
+						case 1:
+							getOffsetXY(event);
+							
+							dot = offsetX + ',' + offsetY;
+							puntos.push(dot);
+							++pointerCounter;
+							
+							drawLine(contextCanvas, offsetX, puntos[pointerCounter-1].split(',')[1]);
+							showInput(offsetX, puntos[pointerCounter-1].split(',')[1]);
+							break;
+						case 2:
+							getOffsetXY(event);
+							
+							dot = offsetX + ',' + offsetY;
+							puntos.push(dot);
+							++pointerCounter;
+							
+							drawLine(contextCanvas, puntos[pointerCounter-1].split(',')[0], offsetY);
+							showInput(puntos[pointerCounter-1].split(',')[0], offsetY);
+							break;
+						default:
+							getOffsetXY(event);
+						
+							dot = offsetX + ',' + offsetY;
+							puntos.push(dot);
+							++pointerCounter;
+						
+							drawLine(contextCanvas, offsetX, offsetY);
+							showInput(offsetX, offsetY);
+							break;
+					}
+				}
+				else{
+					getOffsetXY(event);
+					
+					dot = offsetX + ',' + offsetY;
+					puntos.push(dot);
+					++pointerCounter;
+					
+					drawLine(contextCanvas, offsetX, offsetY);
+					showInput(offsetX, offsetY);
+				}
 			}
 		}
 		else{
 			getOffsetXY(event);
+			
+			dot = offsetX + ',' + offsetY;
+			puntos.push(dot);
+			++pointerCounter;
+			
 			contextCanvas.beginPath();
 			contextCanvas.moveTo(offsetX, offsetY);
 		}
+		/*
 		getOffsetXY(event);
 		dot = offsetX + ',' + offsetY;
 		puntos.push(dot);
 		++pointerCounter;
+		*/
+		clickable = true;
 	}
 	
-	if (isDrawGrid){
-		getOffsetXY(event);
-		if (offsetX !== -1){
-			getCoordinatesGrid(offsetX, offsetY);
+	if (isDrawGrid && isShapeClosed){
+		console.log(isDrawGrid, isShapeClosed);
+		if (puntos.length > 3 && isLastMeasure){
+			console.log(puntos.length, isLastMeasure);
+			getOffsetXY(event);
+			if (offsetX !== -1){
+				getCoordinatesGrid(offsetX, offsetY);
+				isDrawGrid = false;
+			}
+		}
+		else{
+			alert('Introduzca la medida');
 		}
 	}
+	
 }
 
 /**
@@ -276,6 +328,11 @@ function writeMeasure(cc, x0, y0, x1, y1){
 	else{
 		alert('Invalid measure');
 	}
+	
+	if (pointerCounter === 4 && !isShapeClosed && !isDrawGrid){
+		document.getElementById('idCloseShape').removeAttribute('disabled');
+		isLastMeasure = true;
+	}
 }
 
 /**
@@ -286,48 +343,59 @@ function getMeasureIntro(event){
 	var code = event.which ? event.which : event.keyCode;
 	
 	if (code === 13){
-		if (canvas){			
-			if (clickable){
-				if (parseInt(puntos[pointerCounter-2].split(',')[0]) <= parseInt(puntos[pointerCounter-1].split(',')[0])){
-					writeMeasure(
-							contextCanvas, 
-							puntos[pointerCounter-2].split(',')[0],
-							puntos[pointerCounter-2].split(',')[1],
-							puntos[pointerCounter-1].split(',')[0],
-							puntos[pointerCounter-1].split(',')[1]);
+		if (document.getElementById('inputM').value !== ''){
+			if (canvas){			
+				if (clickable){
+					if (parseInt(puntos[pointerCounter-2].split(',')[0]) <= parseInt(puntos[pointerCounter-1].split(',')[0])){
+						writeMeasure(
+								contextCanvas, 
+								puntos[pointerCounter-2].split(',')[0],
+								puntos[pointerCounter-2].split(',')[1],
+								puntos[pointerCounter-1].split(',')[0],
+								puntos[pointerCounter-1].split(',')[1]);
+					}
+					else{
+						writeMeasure(
+								contextCanvas, 
+								puntos[pointerCounter-1].split(',')[0],
+								puntos[pointerCounter-1].split(',')[1],
+								puntos[pointerCounter-2].split(',')[0],
+								puntos[pointerCounter-2].split(',')[1]);
+					}
 				}
 				else{
-					writeMeasure(
-							contextCanvas, 
-							puntos[pointerCounter-1].split(',')[0],
-							puntos[pointerCounter-1].split(',')[1],
-							puntos[pointerCounter-2].split(',')[0],
-							puntos[pointerCounter-2].split(',')[1]);
+					if (parseInt(puntos[0].split(',')[0]) <= parseInt(puntos[pointerCounter-1].split(',')[0])){
+						writeMeasure(
+								contextCanvas,
+								puntos[0].split(',')[0],
+								puntos[0].split(',')[1],
+								puntos[pointerCounter-1].split(',')[0],
+								puntos[pointerCounter-1].split(',')[1]);
+					}
+					else{
+						writeMeasure(
+								contextCanvas,
+								puntos[pointerCounter-1].split(',')[0],
+								puntos[pointerCounter-1].split(',')[1],
+								puntos[0].split(',')[0],
+								puntos[0].split(',')[1]);
+					}
+					document.getElementById('btnSave').removeAttribute('disabled');
 				}
+				var inputMedida = document.getElementById('inputMedida');
+				inputMedida.style.display = 'none';
+				inputMedida.children[0].value = '';
 			}
-			else{
-				if (parseInt(puntos[0].split(',')[0]) <= parseInt(puntos[pointerCounter-1].split(',')[0])){
-					writeMeasure(
-							contextCanvas,
-							puntos[0].split(',')[0],
-							puntos[0].split(',')[1],
-							puntos[pointerCounter-1].split(',')[0],
-							puntos[pointerCounter-1].split(',')[1]);
-				}
-				else{
-					writeMeasure(
-							contextCanvas,
-							puntos[pointerCounter-1].split(',')[0],
-							puntos[pointerCounter-1].split(',')[1],
-							puntos[0].split(',')[0],
-							puntos[0].split(',')[1]);
-				}
-				document.getElementById('btnSave').removeAttribute('disabled');
-			}
-			var inputMedida = document.getElementById('inputMedida');
-			inputMedida.style.display = 'none';
-			inputMedida.children[0].value = '';
 		}
+		else{
+			alert('Debe insertar la medida');
+		}
+		/*
+		 * Fixed bug
+		if (puntos.length >= 4){
+			isDrawGrid = true;
+		}
+		*/
 	}
 }
 
@@ -338,26 +406,29 @@ function closeShape(){
 	var finalX, finalY;
 	var inicioX, inicioY;
 	
-	if (clickable){
-		if (puntos.length > 2){
-			finalX = puntos[puntos.length-1].split(',')[0];
-			finalY = puntos[puntos.length-1].split(',')[1];
-			inicioX = puntos[0].split(',')[0];
-			inicioY = puntos[0].split(',')[1];
-			
-			contextCanvas.moveTo(finalX, finalY);
-			contextCanvas.lineTo(inicioX, inicioY);
-			contextCanvas.stroke();
-			
-			document.getElementById('idCloseShape').setAttribute("disabled", "disabled");
-			showInput(inicioX, inicioY);
-			clickable = false;
-			
-			isDrawGrid = true;
-		}
-		else{
-			alert("You have to draw more than two lines to create the shape");
-		}
+	if (puntos.length > 4){
+		alert('Ha creado una figura que no se corresponde con un plato, se procede a limpiar el cuadro');
+		cleanShape();
+	}
+	else if (puntos.length > 3){
+		finalX = puntos[puntos.length-1].split(',')[0];
+		finalY = puntos[puntos.length-1].split(',')[1];
+		inicioX = puntos[0].split(',')[0];
+		inicioY = puntos[0].split(',')[1];
+		
+		contextCanvas.moveTo(finalX, finalY);
+		contextCanvas.lineTo(inicioX, inicioY);
+		contextCanvas.stroke();
+		
+		document.getElementById('idCloseShape').setAttribute("disabled", "disabled");
+		showInput(inicioX, inicioY);
+		clickable = false;
+		
+		isDrawGrid = true;
+		isShapeClosed = true;
+	}
+	else{
+		alert("Debe crear alguna/s líneas más para cerrar la figura");
 	}
 	
 }
@@ -372,6 +443,10 @@ function cleanShape(){
 	
 	document.getElementById('btnSave').disabled = true;
 	document.getElementById('drawShowerPlate').style.display = 'none';
+	document.getElementById('gridMeasures').style.display = 'none';
+	document.getElementById('inputPosX').value = '';
+	document.getElementById('inputPosY').value = '';
+	document.getElementById('inputM').value = '';
 	
 	if (width !== -1 && height !== -1){
 		contextCanvas.fillStyle = '#E6E6FF';
@@ -383,8 +458,10 @@ function cleanShape(){
 		puntos = null;
 		clickable = true;
 		isDrawGrid = false;
+		isShapeClosed = false;
+		isLastMeasure = false;
 		document.getElementById('inputMedida').style.display = 'none';
-		document.getElementById('idCloseShape').removeAttribute("disabled");
+		document.getElementById('idCloseShape').setAttribute("disabled", "disabled");
 	}
 	else{
 		alert('Something went wrong with the canvas, refresh the web page');
